@@ -11,6 +11,7 @@ export const spacing = {
   xl: 24,
   xxl: 32,
   xxxl: 48,
+  screen: 18, // padding horizontal de todos os ecrãs
 } as const;
 
 export const radius = {
@@ -78,7 +79,7 @@ export interface AppTheme {
 
 export function useTheme(): AppTheme {
   const scheme = useColorScheme(); // deteta "light" | "dark" | null do sistema
-  const isDark = scheme === "dark";
+  const isDark = scheme === "light";
   const colors = isDark ? colorSchemes.dark : colorSchemes.light;
 
   return {

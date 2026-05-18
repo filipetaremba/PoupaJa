@@ -8,7 +8,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/constants/theme";
-import { SafeScreen } from "./Safescreen";
+import { SafeScreen } from "@/components/layout/Safescreen";
 import { CaixinhaCard } from "@/components/caixinha/CaixinhaCard";
 import { useCaixinhasStore } from "@/store/useCaixinhasStore";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -19,12 +19,12 @@ export default function Home() {
   const { colors, spacing, radius, fontSize, fontWeight, shadow } = useTheme();
   const { user } = useAuthStore();
   const { caixinhas } = useCaixinhasStore();
-
+ 
   const ativas = caixinhas.filter((c) => c.estado === "ativa");
   const totalPoupado = caixinhas.reduce((acc, c) => acc + c.valorAcumulado, 0);
-
+ 
   const primeiroNome = user?.nome?.split(" ")[0] ?? "Utilizador";
-
+ 
   const renderHeader = () => (
     <View>
       {/* Saudação */}
@@ -44,7 +44,7 @@ export default function Home() {
           <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
         </Pressable>
       </View>
-
+ 
       {/* Card resumo */}
       <View
         style={[
@@ -60,14 +60,14 @@ export default function Home() {
       >
         {/* Círculo decorativo */}
         <View style={[styles.circle, { backgroundColor: colors.primaryLight, opacity: 0.2 }]} />
-
+ 
         <Text style={[styles.resumoLabel, { color: "rgba(255,255,255,0.75)", fontSize: fontSize.sm }]}>
           Total poupado
         </Text>
         <Text style={[styles.resumoValor, { color: colors.white, fontSize: fontSize.xxxl, fontWeight: fontWeight.extrabold }]}>
           {formatarMoeda(totalPoupado)}
         </Text>
-
+ 
         <View style={[styles.resumoRow, { marginTop: spacing.lg }]}>
           <View style={styles.resumoStat}>
             <Ionicons name="layers-outline" size={16} color="rgba(255,255,255,0.7)" />
@@ -83,7 +83,7 @@ export default function Home() {
           </View>
         </View>
       </View>
-
+ 
       {/* Título da lista */}
       <View style={[styles.listHeader, { marginBottom: spacing.md }]}>
         <Text style={[styles.listTitle, { color: colors.textPrimary, fontSize: fontSize.lg, fontWeight: fontWeight.semibold }]}>
@@ -97,7 +97,7 @@ export default function Home() {
       </View>
     </View>
   );
-
+ 
   const renderEmpty = () => (
     <View style={[styles.empty, { paddingTop: spacing.xxxl }]}>
       <View style={[styles.emptyIcon, { backgroundColor: colors.surfaceSecondary, borderRadius: radius.xxl }]}>
@@ -120,7 +120,7 @@ export default function Home() {
       </Pressable>
     </View>
   );
-
+ 
   return (
     <SafeScreen edges={["top"]} contentStyle={{ paddingHorizontal: 0 }}>
       <FlatList
@@ -146,7 +146,7 @@ export default function Home() {
         )}
         showsVerticalScrollIndicator={false}
       />
-
+ 
       {/* FAB — botão flutuante */}
       {caixinhas.length > 0 && (
         <Pressable
@@ -166,7 +166,7 @@ export default function Home() {
     </SafeScreen>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   list: {
     flexGrow: 1,

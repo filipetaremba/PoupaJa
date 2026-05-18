@@ -1,8 +1,6 @@
 import {
   View,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   type ViewStyle,
 } from "react-native";
@@ -31,7 +29,7 @@ export function SafeScreen({
       style={styles.scroll}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
+        { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl },
         contentStyle,
       ]}
       showsVerticalScrollIndicator={false}
@@ -43,7 +41,7 @@ export function SafeScreen({
     <View
       style={[
         styles.content,
-        { paddingHorizontal: spacing.xl },
+        { paddingHorizontal: spacing.screen },
         contentStyle,
       ]}
     >
@@ -56,22 +54,13 @@ export function SafeScreen({
       style={[styles.safe, { backgroundColor: colors.background }, style]}
       edges={edges}
     >
-      <KeyboardAvoidingView
-        style={styles.keyboard}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-      >
-        {content}
-      </KeyboardAvoidingView>
+      {content}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: {
-    flex: 1,
-  },
-  keyboard: {
     flex: 1,
   },
   scroll: {

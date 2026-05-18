@@ -7,7 +7,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from "react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/constants/theme";
 
@@ -30,11 +30,18 @@ export function Input({
   onRightIconPress,
   containerStyle,
   secureTextEntry,
+  onFocus,
+  onBlur,
   ...rest
 }: InputProps) {
   const { colors, spacing, radius, fontSize } = useTheme();
+
+  // Estado local — isolado por instância, não afecta outros inputs
   const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(secureTextEntry ?? false);
+
+  // Ref para não depender de re-renders do pai
+  const inputRef = useRef<TextInput>(null);
 
   const hasError = !!error;
   const isPassword = secureTextEntry;
@@ -47,18 +54,24 @@ export function Input({
 
   return (
     <View style={[styles.wrapper, containerStyle]}>
+
       {label && (
         <Text
           style={[
             styles.label,
-            { color: colors.textSecondary, fontSize: fontSize.sm, marginBottom: spacing.sm },
+            {
+              color: colors.textSecondary,
+              fontSize: fontSize.sm,
+              marginBottom: spacing.sm,
+            },
           ]}
         >
           {label}
         </Text>
       )}
 
-      <View
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
         style={[
           styles.inputContainer,
           {
@@ -66,13 +79,7 @@ export function Input({
             borderColor,
             borderRadius: radius.lg,
             paddingHorizontal: spacing.lg,
-          },
-          isFocused && {
-            shadowColor: hasError ? colors.danger : colors.primary,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.15,
-            shadowRadius: 6,
-            elevation: 2,
+            borderWidth: isFocused ? 2 : 1.5,
           },
         ]}
       >
@@ -86,6 +93,7 @@ export function Input({
         )}
 
         <TextInput
+          ref={inputRef}
           style={[
             styles.input,
             {
@@ -95,14 +103,27 @@ export function Input({
             },
           ]}
           placeholderTextColor={colors.textMuted}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           secureTextEntry={isSecure}
+          onFocus={(e) => {
+            setIsFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            onBlur?.(e);
+          }}
+          // Garante que o teclado não interfere com outros inputs
+          blurOnSubmit={false}
           {...rest}
         />
 
         {isPassword ? (
-          <Pressable onPress={() => setIsSecure((prev) => !prev)} hitSlop={8}>
+          <Pressable
+            onPress={() => setIsSecure((prev) => !prev)}
+            hitSlop={8}
+            // Evita que o press propague e active o input pai
+            onStartShouldSetResponder={() => true}
+          >
             <Ionicons
               name={isSecure ? "eye-outline" : "eye-off-outline"}
               size={20}
@@ -110,11 +131,15 @@ export function Input({
             />
           </Pressable>
         ) : rightIcon ? (
-          <Pressable onPress={onRightIconPress} hitSlop={8}>
+          <Pressable
+            onPress={onRightIconPress}
+            hitSlop={8}
+            onStartShouldSetResponder={() => true}
+          >
             <Ionicons name={rightIcon} size={20} color={colors.textMuted} />
           </Pressable>
         ) : null}
-      </View>
+      </Pressable>
 
       {(error || hint) && (
         <Text
@@ -144,7 +169,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
     height: 52,
   },
   leftIcon: {
@@ -152,6 +176,8 @@ const styles = StyleSheet.create({
   },
   input: {
     paddingVertical: 0,
+    // Garante que cada input é independente
+    textAlignVertical: "center",
   },
   helperText: {
     fontWeight: "400",
