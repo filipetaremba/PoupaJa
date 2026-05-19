@@ -2,7 +2,6 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/constants/theme";
 import { SafeScreen } from "@/components/layout/Safescreen";
-import { Header } from "@react-navigation/elements";
 
 const ITEMS = [
   {
@@ -35,10 +34,36 @@ export default function Notificacoes() {
   const { colors, spacing, radius, fontSize, fontWeight, shadow } = useTheme();
 
   return (
-    <SafeScreen>
-      <Header showBack title="Notificações" />
+    <SafeScreen contentStyle={{ paddingHorizontal: 0 }}>
 
-      <View style={{ gap: spacing.md, paddingTop: spacing.md }}>
+      {/* Cabeçalho */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            paddingHorizontal: spacing.screen,
+            paddingVertical: spacing.lg,
+          },
+        ]}
+      >
+        <Text
+          style={{
+            flex: 1,
+            textAlign: "center",
+            color: colors.textPrimary,
+            fontSize: fontSize.lg,
+            fontWeight: fontWeight.semibold,
+          }}
+        >
+          Notificações
+        </Text>
+      </View>
+
+      {/* Conteúdo */}
+      <View style={{ gap: spacing.md, paddingTop: spacing.md, paddingHorizontal: spacing.screen }}>
         {ITEMS.map((item, i) => (
           <View
             key={i}
@@ -100,6 +125,11 @@ export default function Notificacoes() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   card: {
     flexDirection: "row",
     gap: 14,
