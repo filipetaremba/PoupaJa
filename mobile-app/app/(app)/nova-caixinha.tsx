@@ -46,6 +46,13 @@ export default function NovaCaixinha() {
     return Object.keys(novosErros).length === 0;
   };
 
+  const resetarFormulario = () => {
+    setNome("");
+    setValorObjetivo("");
+    setValorDiario("");
+    setErros({});
+  };
+
   const handleCriar = () => {
     if (!validar()) return;
     setLoading(true);
@@ -63,6 +70,7 @@ export default function NovaCaixinha() {
     };
     setTimeout(() => {
       addCaixinha(novaCaixinha);
+      resetarFormulario();
       setLoading(false);
       router.replace("/(app)/home");
     }, 800);
@@ -84,22 +92,6 @@ export default function NovaCaixinha() {
           },
         ]}
       >
-        {/* <Pressable
-              onPress={() => router.back()}
-              hitSlop={8}
-                style={[
-                  styles.backBtn,
-                  {
-                    backgroundColor: colors.surface,
-                    borderRadius: radius.md,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-              <Ionicons name="arrow-back-outline" size={20} color={colors.textPrimary} />
-            </Pressable> */}
-
         <Text
           style={[
             styles.headerTitle,
@@ -112,9 +104,6 @@ export default function NovaCaixinha() {
         >
           Nova Caixinha
         </Text>
-
-        {/* Espaço para alinhar o título ao centro */}
-        {/* <View style={styles.backBtn} /> */}
       </View>
 
       <ScrollView

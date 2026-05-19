@@ -79,7 +79,7 @@ export interface AppTheme {
 
 export function useTheme(): AppTheme {
   const scheme = useColorScheme() ?? "light"; // deteta "light" | "dark" | null do sistema
-  const isDark = scheme === "dark";
+  const isDark = scheme === "light";
   const colors = isDark ? colorSchemes.dark : colorSchemes.light;
 
   return {

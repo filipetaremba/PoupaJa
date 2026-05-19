@@ -4,6 +4,7 @@ import {
   StyleSheet,
   FlatList,
   Pressable,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,21 +29,60 @@ export default function Home() {
   const renderHeader = () => (
     <View>
       {/* Saudação */}
-      <View style={[styles.greeting, { marginBottom: spacing.xl }]}>
-        <View>
-          <Text style={[styles.greetSub, { color: colors.textSecondary, fontSize: fontSize.sm }]}>
-            Bem-vindo 👋
-          </Text>
-          <Text style={[styles.greetName, { color: colors.textPrimary, fontSize: fontSize.xl, fontWeight: fontWeight.bold }]}>
-            {primeiroNome}
-          </Text>
+      <View style={[styles.greeting, { marginBottom: spacing.md }]}>
+        {/* Avatar + texto */}
+        <View style={styles.greetLeft}>
+          {/* Avatar do utilizador */}
+          <Pressable
+            onPress={() => router.push("/(app)/perfil")}
+            style={[
+              styles.avatar,
+              {
+                borderRadius: radius.full,
+                borderWidth: 2,
+                borderColor: colors.primary,
+                backgroundColor: colors.surfaceSecondary,
+                overflow: "hidden",
+              },
+            ]}
+          >
+            {user?.fotoUrl ? (
+              <Image
+                source={{ uri: user.fotoUrl }}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontSize: fontSize.lg,
+                  fontWeight: fontWeight.bold,
+                }}
+              >
+                {primeiroNome.charAt(0).toUpperCase()}
+              </Text>
+            )}
+          </Pressable>
+
+          {/* Nome */}
+          <View>
+            <Text style={[styles.greetSub, { color: colors.textSecondary, fontSize: fontSize.sm }]}>
+              Bem-vindo 👋
+            </Text>
+            <Text style={[styles.greetName, { color: colors.textPrimary, fontSize: fontSize.xl, fontWeight: fontWeight.bold }]}>
+              {primeiroNome}
+            </Text>
+          </View>
         </View>
-        <Pressable
+
+        {/* Botão de suporte */}
+        {/* <Pressable
           style={[styles.notifBtn, { backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border }]}
-          onPress={() => {}}
+          onPress={() => router.push("/(app)/home")}
         >
-          <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
-        </Pressable>
+          <Ionicons name="help-circle-outline" size={22} color={colors.textPrimary} />
+        </Pressable> */}
       </View>
  
       {/* Card resumo */}
@@ -178,6 +218,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  greetLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  avatar: {
+    width: 46,
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
   },
   greetSub: {},
   greetName: {},

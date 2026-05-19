@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Pressable,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,14 +13,12 @@ import { useTheme } from "@/constants/theme";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { SafeScreen } from "@/components/layout/Safescreen";
-import { Header } from "@react-navigation/elements";
 import { ProgressBar } from "@/components/ProgressBar";
 import { useCaixinha } from "@/hooks/useCaixinha";
 import { useDebito } from "@/hooks/useDebito";
 import {
   formatarMoeda,
   formatarPercentagem,
-  formatarDias,
   formatarDataRelativa,
 } from "@/lib/formatters";
 
@@ -37,8 +36,36 @@ export default function CaixinhaDetalhe() {
 
   if (!caixinha || !progresso) {
     return (
-      <SafeScreen>
-        <Header showBack title="Caixinha" />
+      <SafeScreen contentStyle={{ paddingHorizontal: 0 }}>
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: colors.background,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+              paddingHorizontal: spacing.screen,
+              paddingVertical: spacing.lg,
+            },
+          ]}
+        >
+          <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
+            <Ionicons name="arrow-back-outline" size={20} color={colors.textPrimary} />
+          </Pressable>
+          <Text
+            style={[
+              styles.headerTitle,
+              {
+                color: colors.textPrimary,
+                fontSize: fontSize.lg,
+                fontWeight: fontWeight.semibold,
+              },
+            ]}
+          >
+            Caixinha
+          </Text>
+          <View style={styles.backBtn} />
+        </View>
         <View style={styles.notFound}>
           <Text style={{ color: colors.textSecondary }}>
             Caixinha não encontrada.
@@ -50,9 +77,7 @@ export default function CaixinhaDetalhe() {
 
   const handleLevantamento = () => {
     if (caixinha.valorAcumulado <= 0) return;
-
     const sim = simularLevantamentoAtual(caixinha.valorAcumulado);
-
     Alert.alert(
       "Levantar antecipadamente?",
       `Valor bruto: ${formatarMoeda(sim.valorBruto)}\nPenalização (10%): ${formatarMoeda(sim.valorPenalizacao)}\nVai receber: ${formatarMoeda(sim.valorLiquido)}`,
@@ -62,11 +87,7 @@ export default function CaixinhaDetalhe() {
           text: "Confirmar levantamento",
           style: "destructive",
           onPress: () => {
-            levantarAntecipado(
-              caixinha,
-              caixinha.valorAcumulado,
-              sim.valorPenalizacao
-            );
+            levantarAntecipado(caixinha, caixinha.valorAcumulado, sim.valorPenalizacao);
             router.back();
           },
         },
@@ -95,8 +116,40 @@ export default function CaixinhaDetalhe() {
   };
 
   return (
-    <SafeScreen edges={["top"]}>
-      <Header showBack title={caixinha.nome} />
+    <SafeScreen edges={["top"]} contentStyle={{ paddingHorizontal: 0 }}>
+
+      {/* Cabeçalho */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            paddingHorizontal: spacing.screen,
+            paddingVertical: spacing.lg,
+          },
+        ]}
+      >
+        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
+          <Ionicons name="arrow-back-outline" size={20} color={colors.textPrimary} />
+        </Pressable>
+
+        <Text
+          style={[
+            styles.headerTitle,
+            {
+              color: colors.textPrimary,
+              fontSize: fontSize.lg,
+              fontWeight: fontWeight.semibold,
+            },
+          ]}
+        >
+          {caixinha.nome}
+        </Text>
+
+        <View style={styles.backBtn} />
+      </View>
 
       <ScrollView
         contentContainerStyle={[
@@ -174,7 +227,7 @@ export default function CaixinhaDetalhe() {
           </View>
         </View>
 
-        {/* Stats */}
+        {/* Stats — apenas 2 cards */}
         <View style={[styles.statsGrid, { marginBottom: spacing.xl }]}>
           {[
             {
@@ -183,19 +236,9 @@ export default function CaixinhaDetalhe() {
               valor: formatarMoeda(caixinha.valorDiario),
             },
             {
-              icon: "time-outline",
-              label: "Dias restantes",
-              valor: formatarDias(progresso.diasRestantesEstimados),
-            },
-            {
               icon: "trending-up-outline",
               label: "Em falta",
               valor: formatarMoeda(progresso.valorEmFalta),
-            },
-            {
-              icon: "layers-outline",
-              label: "Contribuições",
-              valor: `${contribuicoes.length}`,
             },
           ].map((item, i) => (
             <View
@@ -212,11 +255,7 @@ export default function CaixinhaDetalhe() {
                 },
               ]}
             >
-              <Ionicons
-                name={item.icon as any}
-                size={20}
-                color={colors.primary}
-              />
+              <Ionicons name={item.icon as any} size={20} color={colors.primary} />
               <Text
                 style={[
                   styles.statLabel,
@@ -291,11 +330,7 @@ export default function CaixinhaDetalhe() {
               },
             ]}
           >
-            <Ionicons
-              name="receipt-outline"
-              size={28}
-              color={colors.textMuted}
-            />
+            <Ionicons name="receipt-outline" size={28} color={colors.textMuted} />
             <Text
               style={{
                 color: colors.textMuted,
@@ -328,17 +363,13 @@ export default function CaixinhaDetalhe() {
                     style={[
                       styles.histIcon,
                       {
-                        backgroundColor: isEntrada
-                          ? colors.successMuted
-                          : colors.dangerMuted,
+                        backgroundColor: isEntrada ? colors.successMuted : colors.dangerMuted,
                         borderRadius: radius.md,
                       },
                     ]}
                   >
                     <Ionicons
-                      name={
-                        isEntrada ? "arrow-down-outline" : "arrow-up-outline"
-                      }
+                      name={isEntrada ? "arrow-down-outline" : "arrow-up-outline"}
                       size={18}
                       color={isEntrada ? colors.success : colors.danger}
                     />
@@ -353,12 +384,7 @@ export default function CaixinhaDetalhe() {
                     >
                       {c.descricao}
                     </Text>
-                    <Text
-                      style={{
-                        color: colors.textMuted,
-                        fontSize: fontSize.xs,
-                      }}
-                    >
+                    <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
                       {formatarDataRelativa(c.data)}
                     </Text>
                   </View>
@@ -386,6 +412,21 @@ export default function CaixinhaDetalhe() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   notFound: {
     flex: 1,
     alignItems: "center",
@@ -423,11 +464,10 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 12,
   },
   statCard: {
-    width: "47%",
+    flex: 1,
   },
   statLabel: {},
   statValor: {},
