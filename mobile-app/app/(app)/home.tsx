@@ -118,7 +118,9 @@ export default function Home() {
           Criar caixinha
         </Text>
       </Pressable>
+      
     </View>
+    
   );
  
   return (

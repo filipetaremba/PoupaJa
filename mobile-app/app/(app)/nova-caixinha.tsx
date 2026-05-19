@@ -6,7 +6,6 @@ import { useTheme } from "@/constants/theme";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { SafeScreen } from "@/components/layout/Safescreen";
-import { Header } from "@react-navigation/elements";
 import { useCaixinhasStore } from "@/store/useCaixinhasStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { calcularDiasParaObjetivo } from "@/lib/calculos";
@@ -16,16 +15,6 @@ import type { Caixinha } from "@/types";
 function gerarId(): string {
   return Math.random().toString(36).substring(2, 10);
 }
-
-// Sugestões rápidas de objectivos
-const SUGESTOES = [
-  { nome: "Telefone", icon: "phone-portrait-outline" },
-  { nome: "Viagem", icon: "airplane-outline" },
-  { nome: "Televisão", icon: "tv-outline" },
-  { nome: "Portátil", icon: "laptop-outline" },
-  { nome: "Mota", icon: "bicycle-outline" },
-  { nome: "Outro", icon: "ellipsis-horizontal-outline" },
-];
 
 export default function NovaCaixinha() {
   const { colors, spacing, radius, fontSize, fontWeight, shadow } = useTheme();
@@ -81,7 +70,52 @@ export default function NovaCaixinha() {
 
   return (
     <SafeScreen contentStyle={{ paddingHorizontal: 0 }}>
-      <Header showBack title="Nova Caixinha" />
+
+      {/* Cabeçalho — respeita light/dark */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            paddingHorizontal: spacing.screen,
+            paddingVertical: spacing.lg,
+          },
+        ]}
+      >
+        {/* <Pressable
+              onPress={() => router.back()}
+              hitSlop={8}
+                style={[
+                  styles.backBtn,
+                  {
+                    backgroundColor: colors.surface,
+                    borderRadius: radius.md,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+              <Ionicons name="arrow-back-outline" size={20} color={colors.textPrimary} />
+            </Pressable> */}
+
+        <Text
+          style={[
+            styles.headerTitle,
+            {
+              color: colors.textPrimary,
+              fontSize: fontSize.lg,
+              fontWeight: fontWeight.semibold,
+            },
+          ]}
+        >
+          Nova Caixinha
+        </Text>
+
+        {/* Espaço para alinhar o título ao centro */}
+        {/* <View style={styles.backBtn} /> */}
+      </View>
 
       <ScrollView
         style={{ flex: 1 }}
@@ -92,61 +126,6 @@ export default function NovaCaixinha() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-
-        {/* Sugestões rápidas */}
-        {/* <Text
-          style={[
-            styles.sectionLabel,
-            { color: colors.textMuted, fontSize: fontSize.xs, fontWeight: fontWeight.semibold, marginBottom: spacing.sm },
-          ]}
-        >
-          ESCOLHE UM OBJECTIVO
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}
-        >
-          {SUGESTOES.map((s) => {
-            const activo = nome === s.nome;
-            return (
-              <Pressable
-                key={s.nome}
-                onPress={() => { setNome(s.nome); setErros((e) => ({ ...e, nome: "" })); }}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: activo ? colors.primary : colors.surface,
-                    borderRadius: radius.full,
-                    borderWidth: 1.5,
-                    borderColor: activo ? colors.primary : colors.border,
-                    paddingVertical: spacing.sm,
-                    paddingHorizontal: spacing.lg,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={s.icon as any}
-                  size={16}
-                  color={activo ? colors.white : colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.chipText,
-                    {
-                      color: activo ? colors.white : colors.textSecondary,
-                      fontSize: fontSize.sm,
-                      fontWeight: activo ? fontWeight.semibold : fontWeight.regular,
-                    },
-                  ]}
-                >
-                  {s.nome}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView> */}
-
         {/* Formulário */}
         <View style={{ gap: spacing.lg, marginTop: spacing.md }}>
           <Input
@@ -204,12 +183,11 @@ export default function NovaCaixinha() {
               </Text>
             </View>
 
-            {/* Stats da previsão */}
             <View style={[styles.previsaoStats, { marginTop: spacing.md, gap: spacing.sm }]}>
               {[
-                { label: "Objectivo",   valor: formatarMoeda(objetivo) },
-                { label: "Por dia",     valor: formatarMoeda(diario) },
-                { label: "Duração",     valor: formatarDias(diasEstimados) },
+                { label: "Objectivo", valor: formatarMoeda(objetivo) },
+                { label: "Por dia",   valor: formatarMoeda(diario) },
+                { label: "Duração",   valor: formatarDias(diasEstimados) },
               ].map((item, i) => (
                 <View key={i} style={styles.previsaoStatRow}>
                   <Text style={{ color: colors.textSecondary, fontSize: fontSize.sm }}>
@@ -238,25 +216,31 @@ export default function NovaCaixinha() {
             onPress={handleCriar}
           />
         </View>
-
+        
       </ScrollView>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingTop: 8,
-  },
-  sectionLabel: {
-    letterSpacing: 0.6,
-  },
-  chip: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    justifyContent: "center",
   },
-  chipText: {},
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  content: {
+    paddingTop: 16,
+  },
   previsao: {},
   previsaoRow: {
     flexDirection: "row",

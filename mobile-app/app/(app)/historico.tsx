@@ -1,9 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-} from "react-native";
+import { View, Text, StyleSheet, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/constants/theme";
 import { SafeScreen } from "@/components/layout/Safescreen";
@@ -15,12 +10,10 @@ export default function Historico() {
   const { colors, spacing, radius, fontSize, fontWeight, shadow } = useTheme();
   const { contribuicoes, caixinhas } = useCaixinhasStore();
 
-  // Ordena do mais recente para o mais antigo
   const sorted = [...contribuicoes].sort(
     (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
   );
 
-  // Agrupa por data relativa
   const grouped: { titulo: string; dados: Contribuicao[] }[] = [];
   for (const c of sorted) {
     const titulo = formatarDataRelativa(c.data);
@@ -45,7 +38,6 @@ export default function Historico() {
 
   const renderItem = ({ item }: { item: { titulo: string; dados: Contribuicao[] } }) => (
     <View style={{ marginBottom: spacing.xl }}>
-      {/* Título do grupo */}
       <Text
         style={[
           styles.groupTitle,
@@ -61,7 +53,6 @@ export default function Historico() {
         {item.titulo.toUpperCase()}
       </Text>
 
-      {/* Items do grupo */}
       <View
         style={[
           styles.groupCard,
@@ -80,20 +71,12 @@ export default function Historico() {
 
           return (
             <View key={c.id}>
-              <View
-                style={[
-                  styles.row,
-                  { padding: spacing.lg },
-                ]}
-              >
-                {/* Ícone */}
+              <View style={[styles.row, { padding: spacing.lg }]}>
                 <View
                   style={[
                     styles.iconWrap,
                     {
-                      backgroundColor: isEntrada
-                        ? colors.successMuted
-                        : colors.dangerMuted,
+                      backgroundColor: isEntrada ? colors.successMuted : colors.dangerMuted,
                       borderRadius: radius.md,
                     },
                   ]}
@@ -105,27 +88,17 @@ export default function Historico() {
                   />
                 </View>
 
-                {/* Info */}
                 <View style={styles.info}>
                   <Text
                     style={[
                       styles.descricao,
-                      {
-                        color: colors.textPrimary,
-                        fontSize: fontSize.sm,
-                        fontWeight: fontWeight.medium,
-                      },
+                      { color: colors.textPrimary, fontSize: fontSize.sm, fontWeight: fontWeight.medium },
                     ]}
                     numberOfLines={1}
                   >
                     {getNomeCaixinha(c.caixinhaId)}
                   </Text>
-                  <Text
-                    style={[
-                      styles.tipo,
-                      { color: colors.textMuted, fontSize: fontSize.xs },
-                    ]}
-                  >
+                  <Text style={[styles.tipo, { color: colors.textMuted, fontSize: fontSize.xs }]}>
                     {c.tipo === "debito_automatico"
                       ? "Débito automático"
                       : c.tipo === "manual"
@@ -134,7 +107,6 @@ export default function Historico() {
                   </Text>
                 </View>
 
-                {/* Valor */}
                 <Text
                   style={[
                     styles.valor,
@@ -150,14 +122,8 @@ export default function Historico() {
                 </Text>
               </View>
 
-              {/* Separador */}
               {!isUltimo && (
-                <View
-                  style={[
-                    styles.separator,
-                    { backgroundColor: colors.border, marginLeft: 68 },
-                  ]}
-                />
+                <View style={[styles.separator, { backgroundColor: colors.border, marginLeft: 68 }]} />
               )}
             </View>
           );
@@ -168,21 +134,6 @@ export default function Historico() {
 
   const renderHeader = () => (
     <View style={{ marginBottom: spacing.xl }}>
-      {/* Título */}
-      <Text
-        style={[
-          styles.titulo,
-          {
-            color: colors.textPrimary,
-            fontSize: fontSize.xxl,
-            fontWeight: fontWeight.bold,
-            marginBottom: spacing.xl,
-          },
-        ]}
-      >
-        Histórico
-      </Text>
-
       {/* Resumo */}
       <View style={styles.resumoRow}>
         <View
@@ -197,20 +148,10 @@ export default function Historico() {
           ]}
         >
           <Ionicons name="arrow-down-outline" size={18} color={colors.success} />
-          <Text
-            style={[
-              styles.resumoLabel,
-              { color: colors.successText, fontSize: fontSize.xs, marginTop: spacing.xs },
-            ]}
-          >
+          <Text style={[styles.resumoLabel, { color: colors.successText, fontSize: fontSize.xs, marginTop: spacing.xs }]}>
             Total entradas
           </Text>
-          <Text
-            style={[
-              styles.resumoValor,
-              { color: colors.success, fontSize: fontSize.lg, fontWeight: fontWeight.bold },
-            ]}
-          >
+          <Text style={[styles.resumoValor, { color: colors.success, fontSize: fontSize.lg, fontWeight: fontWeight.bold }]}>
             {formatarMoeda(totalEntradas)}
           </Text>
         </View>
@@ -227,20 +168,10 @@ export default function Historico() {
           ]}
         >
           <Ionicons name="arrow-up-outline" size={18} color={colors.danger} />
-          <Text
-            style={[
-              styles.resumoLabel,
-              { color: colors.dangerText, fontSize: fontSize.xs, marginTop: spacing.xs },
-            ]}
-          >
+          <Text style={[styles.resumoLabel, { color: colors.dangerText, fontSize: fontSize.xs, marginTop: spacing.xs }]}>
             Total saídas
           </Text>
-          <Text
-            style={[
-              styles.resumoValor,
-              { color: colors.danger, fontSize: fontSize.lg, fontWeight: fontWeight.bold },
-            ]}
-          >
+          <Text style={[styles.resumoValor, { color: colors.danger, fontSize: fontSize.lg, fontWeight: fontWeight.bold }]}>
             {formatarMoeda(totalSaidas)}
           </Text>
         </View>
@@ -258,31 +189,45 @@ export default function Historico() {
       >
         <Ionicons name="receipt-outline" size={40} color={colors.textMuted} />
       </View>
-      <Text
-        style={[
-          styles.emptyTitle,
-          {
-            color: colors.textPrimary,
-            fontSize: fontSize.lg,
-            fontWeight: fontWeight.semibold,
-          },
-        ]}
-      >
+      <Text style={[styles.emptyTitle, { color: colors.textPrimary, fontSize: fontSize.lg, fontWeight: fontWeight.semibold }]}>
         Sem movimentos ainda
       </Text>
-      <Text
-        style={[
-          styles.emptySub,
-          { color: colors.textSecondary, fontSize: fontSize.md },
-        ]}
-      >
+      <Text style={[styles.emptySub, { color: colors.textSecondary, fontSize: fontSize.md }]}>
         As tuas contribuições e levantamentos vão aparecer aqui.
       </Text>
     </View>
   );
 
   return (
-    <SafeScreen edges={["top"]} contentStyle={{ paddingHorizontal: 0 }}>
+    <SafeScreen contentStyle={{ paddingHorizontal: 0 }}>
+
+      {/* Cabeçalho — igual ao da Nova Caixinha */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            paddingHorizontal: spacing.screen,
+            paddingVertical: spacing.lg,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            {
+              color: colors.textPrimary,
+              fontSize: fontSize.lg,
+              fontWeight: fontWeight.semibold,
+            },
+          ]}
+        >
+          Histórico
+        </Text>
+      </View>
+
       <FlatList
         data={grouped}
         keyExtractor={(item) => item.titulo}
@@ -300,11 +245,19 @@ export default function Historico() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+  },
   list: {
     flexGrow: 1,
     paddingTop: 16,
   },
-  titulo: {},
   resumoRow: {
     flexDirection: "row",
     gap: 12,
