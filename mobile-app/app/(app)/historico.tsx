@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/constants/theme";
-import { SafeScreen } from "@/components/layout/SafeScreen";
+import { SafeScreen } from "@/components/layout/Safescreen";
 import { useCaixinhasStore } from "@/store/useCaixinhasStore";
 import { formatarMoeda, formatarDataRelativa } from "@/lib/formatters";
 import type { Contribuicao } from "@/types";

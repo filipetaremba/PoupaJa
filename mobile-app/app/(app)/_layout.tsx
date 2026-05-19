@@ -15,8 +15,8 @@ export default function AppLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 10,
+          height: 80,
+          paddingBottom: 14,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -44,20 +44,20 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="historico"
-        options={{
-          title: "Histórico",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="perfil"
         options={{
           title: "Perfil",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="historico"
+        options={{
+          title: "Histórico",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="receipt-outline" size={size} color={color} />
           ),
         }}
       />

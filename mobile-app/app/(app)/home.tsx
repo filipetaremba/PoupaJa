@@ -31,7 +31,7 @@ export default function Home() {
       <View style={[styles.greeting, { marginBottom: spacing.xl }]}>
         <View>
           <Text style={[styles.greetSub, { color: colors.textSecondary, fontSize: fontSize.sm }]}>
-            Bem-vindo de volta 👋
+            Bem-vindo 👋
           </Text>
           <Text style={[styles.greetName, { color: colors.textPrimary, fontSize: fontSize.xl, fontWeight: fontWeight.bold }]}>
             {primeiroNome}
