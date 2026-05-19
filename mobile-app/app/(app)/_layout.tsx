@@ -44,6 +44,15 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="historico"
+        options={{
+          title: "Histórico",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="receipt-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="perfil"
         options={{
           title: "Perfil",
@@ -51,6 +60,11 @@ export default function AppLayout() {
             <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
+      />
+      {/* Esconde o ecrã de detalhe da tab bar */}
+      <Tabs.Screen
+        name="caixinha/[id]"
+        options={{ href: null }}
       />
     </Tabs>
   );
