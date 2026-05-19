@@ -1,2 +1,1579 @@
-Deizel trabalha aqui
-<h1>ola</h1>
+
+Claude terminou a resposta
+Documento de Filipe Taremba.pdf
+pdf
+
+quero que vc me oriente a fazer a parte USSD desse projecto, eu gosto de trabalhar de forma incremental, entao eu  nao sei nada de como programar em ussd e preciso que vc me fale quais as linhguagens vou usar para programar isso tudo que ai esta, somente as funcionalidades USSD. comece primeiro me falar todas llinguagens e tudu que é preciso baixar
+
+17:03
+Guia USSD para o PoupaJá
+Antes de qualquer coisa, boa notícia: programar USSD é mais simples do que parece. Vou te explicar tudo do zero.
+
+Como o USSD funciona (conceito rápido)
+Quando o utilizador marca um código como *384#, a operadora (Vodafone M-Pesa) envia um pedido HTTP para o teu servidor. O teu servidor responde com texto, e esse texto aparece no ecrã do telemóvel. É isso — USSD é basicamente uma conversa de perguntas e respostas entre o telemóvel e o teu servidor.
+
+Linguagens e Tecnologias
+Linguagem principal: Python
+É a melhor escolha para este projecto porque:
+
+Simples de aprender e ler
+Tem frameworks leves para construir APIs
+A comunidade é enorme, fácil encontrar ajuda
+É o que a maioria dos devs fintech em África usam para USSD
+Framework web: Flask
+É uma biblioteca Python para criar o servidor que recebe os pedidos USSD. Leve, simples, perfeito para este caso.
+
+Base de dados: PostgreSQL
+Para guardar os utilizadores, caixinhas, saldos, histórico de contribuições, etc.
+
+ORM: SQLAlchemy
+Para comunicar com o PostgreSQL usando Python em vez de SQL puro (facilita muito).
+
+Servidor de produção: Gunicorn + Nginx
+Para quando quiseres colocar o servidor a funcionar numa máquina real. No início não precisas disso.
+
+O que precisas de instalar
+1. Python 3.11+
+https://www.python.org/downloads/
+Verifica depois com: python --version
+
+2. pip (já vem com o Python)
+Verifica com: pip --version
+
+3. PostgreSQL
+https://www.postgresql.org/download/
+Ou no Ubuntu/Debian:
+
+bash
+sudo apt install postgresql postgresql-contrib
+4. Git
+https://git-scm.com/downloads
+5. VS Code (editor de código)
+https://code.visualstudio.com/
+Bibliotecas Python (instalam-se com pip)
+Vais criar um ficheiro requirements.txt com isto:
+
+flask==3.0.3
+flask-sqlalchemy==3.1.1
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
+requests==2.32.3
+E instalas tudo de uma vez com:
+
+bash
+pip install -r requirements.txt
+Para simular o USSD localmente (sem operadora)
+No início não tens acesso à rede real da Vodafone. Para desenvolver e testar, usas:
+
+Africa's Talking Sandbox
+https://africastalking.com
+É uma plataforma de simulação USSD gratuita para desenvolvimento. Crias uma conta, eles dão-te um simulador no browser que imita um telemóvel. É o padrão usado em toda África para desenvolver USSD antes de ir para produção.
+
+Resumo visual
+Telemóvel (utilizador marca *XXX#)
+        ↓
+Operadora (Vodafone / Africa's Talking)
+        ↓  pedido HTTP POST
+Teu servidor Flask (Python)
+        ↓
+Base de dados PostgreSQL
+        ↓
+Resposta de texto → volta para o telemóvel
+Ordem de aprendizagem recomendada
+Instalar Python + VS Code — primeiro dia
+Aprender Flask básico — criar um servidor que responde a pedidos HTTP
+Entender o formato USSD — como ler o pedido da operadora e como formatar a resposta
+Criar conta Africa's Talking — para simular o telemóvel
+Construir o Menu 1 (ver caixinhas) — o mais simples para começar
+Adicionar base de dados — PostgreSQL + SQLAlchemy
+Construir os restantes menus — incrementalmente
+Quando tiveres tudo instalado, diz-me e começamos pelo primeiro menu — o utilizador marca o código e vê as suas caixinhas. Passo a passo, sem pressa.
+
+primeiro quero criar a parte visual, ou seja, todo o Menu que tera e depois vamos para o servidor e base de dados, essa é a minha opiniar, mais eu quero saber se essa é a forma mais segura de boa de fazer, ou a melhor forma é criar um pouco do menu e depois, servidor e base de dados
+
+17:29
+Boa pergunta — e tem uma resposta clara
+A tua ideia de fazer tudo o menu primeiro tem um problema prático importante:
+
+O problema do menu sem servidor
+USSD não é como uma página web ou uma app. Não existe "visual" separado da lógica. O menu USSD é o servidor — quando o utilizador marca *384#, o telemóvel pergunta ao servidor "o que mostro?", e o servidor responde com texto.
+
+Não dá para criar o menu num ficheiro e "ligar ao servidor depois". Eles nascem juntos.
+
+A melhor forma — e é mesmo a melhor
+Menu a menu, com servidor desde o início.
+
+Ou seja:
+
+Constróis o Menu 1 completo — menu + servidor + base de dados mínima
+Testas no simulador, vês funcionar no "telemóvel"
+Só depois passas ao Menu 2
+Isto é melhor porque:
+
+Vês resultados reais desde o primeiro dia — isso motiva muito
+Erros aparecem cedo — antes de teres construído tudo em cima de uma base errada
+Cada menu é uma vitória — incremental de verdade
+A ordem concreta para o PoupaJá
+Menu 1 (ver caixinhas)     → servidor + base de dados básica   ✓ completo
+Menu 2 (contribuir)        → adicionar lógica de saldo         ✓ completo
+Menu 3 (criar caixinha)    → adicionar criação de registos      ✓ completo
+Menu 4 (levantar)          → adicionar penalização              ✓ completo
+Menu 5 (simulação)         → só cálculos, o mais simples        ✓ completo
+A tua intuição incremental está certa — só o ponto de partida muda. Em vez de menu todo → servidor, é menu 1 completo → menu 2 completo → ...
+
+Quando quiseres, arrancamos com o Menu 1.
+
+vamos comecar com o primeiro menu, servidor e basededados. por onde eu começo?
+
+17:33
+Começa pela estrutura de pastas
+Antes de escrever qualquer código, cria a estrutura do projecto. Abre o VS Code e no terminal faz isto:
+
+bash
+mkdir poupaja-ussd
+cd poupaja-ussd
+mkdir app
+touch app/menus.py
+touch app/models.py
+touch app/database.py
+touch main.py
+touch requirements.txt
+touch .env
+A estrutura vai ficar assim:
+
+poupaja-ussd/
+├── app/
+│   ├── menus.py       ← lógica dos menus USSD
+│   ├── models.py      ← estrutura da base de dados
+│   └── database.py    ← conexão à base de dados
+├── main.py            ← servidor Flask (ponto de entrada)
+├── requirements.txt   ← bibliotecas necessárias
+└── .env               ← variáveis de ambiente (passwords, etc)
+Depois instala as bibliotecas
+No terminal, ainda dentro da pasta poupaja-ussd:
+
+bash
+pip install flask flask-sqlalchemy psycopg2-binary python-dotenv
+Depois cria a conta Africa's Talking
+Vai a https://africastalking.com, cria conta gratuita. Precisas dela para testar ainda nesta fase.
+
+Tens o VS Code instalado? E o Python? Confirma isso primeiro e diz-me quando tiveres a estrutura de pastas criada — aí escrevemos o primeiro ficheiro juntos.
+
+ja intalei vs, python e a estrutura ja esta  "PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa> cd ussd-app     
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app> pip install flask flask-sqlalchemy psycopg2-binary python-dotenv
+Requirement already satisfied: flask in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (3.1.2)
+Collecting flask-sqlalchemy
+  Downloading flask_sqlalchemy-3.1.1-py3-none-any.whl.metadata (3.4 kB)
+Collecting psycopg2-binary
+  Downloading psycopg2_binary-2.9.12-cp313-cp313-win_amd64.whl.metadata (5.1 kB)
+Collecting python-dotenv
+  Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Requirement already satisfied: blinker>=1.9.0 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from flask) (1.9.0)
+Requirement already satisfied: click>=8.1.3 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from flask) (8.3.0)
+Requirement already satisfied: itsdangerous>=2.2.0 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from flask) (2.2.0)
+Requirement already satisfied: jinja2>=3.1.2 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from flask) (3.1.6)
+Requirement already satisfied: markupsafe>=2.1.1 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from flask) (3.0.3)
+Requirement already satisfied: werkzeug>=3.1.0 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from flask) (3.1.3)
+Collecting sqlalchemy>=2.0.16 (from flask-sqlalchemy)
+  Downloading sqlalchemy-2.0.49-cp313-cp313-win_amd64.whl.metadata (9.8 kB)
+Requirement already satisfied: colorama in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from click>=8.1.3->flask) (0.4.6)
+Collecting greenlet>=1 (from sqlalchemy>=2.0.16->flask-sqlalchemy)
+  Downloading greenlet-3.5.0-cp313-cp313-win_amd64.whl.metadata (3.8 kB)
+Requirement already satisfied: typing-extensions>=4.6.0 in c:\users\acer\appdata\local\programs\python\python313\lib\site-packages (from sqlalchemy>=2.0.16->flask-sqlalchemy) (4.15.0)
+Downloading flask_sqlalchemy-3.1.1-py3-none-any.whl (25 kB)
+Downloading psycopg2_binary-2.9.12-cp313-cp313-win_amd64.whl (2.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 13.5 kB/s  0:02:55
+Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Downloading sqlalchemy-2.0.49-cp313-cp313-win_amd64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 16.4 kB/s  0:02:33
+Downloading greenlet-3.5.0-cp313-cp313-win_amd64.whl (238 kB)
+Installing collected packages: python-dotenv, psycopg2-binary, greenlet, sqlalchemy, flask-sqlalchemy
+Successfully installed flask-sqlalchemy-3.1.1 greenlet-3.5.0 psycopg2-binary-2.9.12 python-dotenv-1.2.2 sqlalchemy-2.0.49 
+[notice] A new release of pip is available: 25.2 -> 26.1.1   
+[notice] To update, run: python.exe -m pip install --upgrade pip
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app>  "
+
+Mostrar mais
+17:58
+Perfeito, tudo instalado com sucesso! Agora vamos escrever o primeiro ficheiro.
+
+Passo 1 — ficheiro .env
+Este ficheiro guarda as configurações sensíveis. Abre o .env e cola isto:
+
+env
+DATABASE_URL=postgresql://postgres:suapassword@localhost:5432/poupaja
+SECRET_KEY=poupaja-secret-123
+Substitui suapassword pela password que usaste quando instalaste o PostgreSQL.
+
+Passo 2 — ficheiro database.py
+Abre app/database.py e cola:
+
+python
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+def init_db(app):
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+Só isto por agora — é a conexão à base de dados.
+
+Passo 3 — ficheiro models.py
+Abre app/models.py e cola:
+
+python
+from app.database import db
+from datetime import datetime
+
+class Utilizador(db.Model):
+    __tablename__ = 'utilizadores'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    telefone    = db.Column(db.String(20), unique=True, nullable=False)
+    nome        = db.Column(db.String(100))
+    criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    caixinhas   = db.relationship('Caixinha', backref='utilizador', lazy=True)
+
+class Caixinha(db.Model):
+    __tablename__ = 'caixinhas'
+
+    id                  = db.Column(db.Integer, primary_key=True)
+    utilizador_id       = db.Column(db.Integer, db.ForeignKey('utilizadores.id'), nullable=False)
+    nome                = db.Column(db.String(100), nullable=False)
+    valor_objectivo     = db.Column(db.Float, nullable=False)
+    valor_acumulado     = db.Column(db.Float, default=0.0)
+    prazo               = db.Column(db.DateTime, nullable=False)
+    criado_em           = db.Column(db.DateTime, default=datetime.utcnow)
+Isto define duas tabelas — utilizadores e as suas caixinhas.
+
+Passo 4 — ficheiro menus.py
+Abre app/menus.py e cola:
+
+python
+from app.models import Utilizador, Caixinha
+from app.database import db
+
+def menu_principal(telefone):
+    # Verifica se o utilizador já existe, se não, cria
+    utilizador = Utilizador.query.filter_by(telefone=telefone).first()
+    if not utilizador:
+        utilizador = Utilizador(telefone=telefone)
+        db.session.add(utilizador)
+        db.session.commit()
+
+    return (
+        "CON Bem-vindo ao PoupaJá\n"
+        "1. Ver caixinhas\n"
+        "2. Contribuir\n"
+        "3. Criar caixinha\n"
+        "4. Levantar dinheiro\n"
+        "5. Simulação de progresso"
+    )
+
+def menu_ver_caixinhas(telefone):
+    utilizador = Utilizador.query.filter_by(telefone=telefone).first()
+
+    if not utilizador or len(utilizador.caixinhas) == 0:
+        return "END Ainda não tens nenhuma caixinha.\nMarca novamente e escolhe a opção 3 para criar uma."
+
+    resposta = "END As tuas caixinhas:\n"
+    for c in utilizador.caixinhas:
+        percentagem = (c.valor_acumulado / c.valor_objectivo) * 100
+        resposta += f"- {c.nome}: {c.valor_acumulado:.0f}MT de {c.valor_objectivo:.0f}MT ({percentagem:.0f}%)\n"
+
+    return resposta
+Nota importante — CON significa que o menu continua (espera input do utilizador). END significa que a sessão termina.
+
+Passo 5 — ficheiro main.py
+Abre main.py e cola:
+
+python
+from flask import Flask, request
+from dotenv import load_dotenv
+from app.database import init_db
+from app import menus
+import os
+
+load_dotenv()
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
+init_db(app)
+
+@app.route('/ussd', methods=['POST'])
+def ussd():
+    session_id   = request.form.get('sessionId')
+    telefone     = request.form.get('phoneNumber')
+    texto        = request.form.get('text', '')
+
+    # texto vazio = primeiro ecrã
+    if texto == '':
+        resposta = menus.menu_principal(telefone)
+
+    # utilizador escolheu opção 1
+    elif texto == '1':
+        resposta = menus.menu_ver_caixinhas(telefone)
+
+    else:
+        resposta = "END Opção inválida. Tenta novamente."
+
+    return resposta, 200, {'Content-Type': 'text/plain'}
+
+if __name__ == '__main__':
+    app.run(debug=True)
+Antes de correr — cria a base de dados no PostgreSQL
+Abre o pgAdmin ou o terminal e cria a base de dados:
+
+sql
+CREATE DATABASE poupaja;
+Corre o servidor
+bash
+python main.py
+Se vires Running on http://127.0.0.1:5000 — está a funcionar.
+
+Diz-me quando chegares aqui e passamos ao teste no simulador do Africa's Talking.
+
+primeiro, vamos fazer so o menu sem conexao com a base de dados e depois vamos criar o backend
+
+18:24
+Faz todo o sentido! Vamos construir e ver o menu a funcionar primeiro, depois ligamos tudo à base de dados.
+
+Simplifica o main.py
+Apaga tudo o que está no main.py e cola isto:
+
+python
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/ussd', methods=['POST'])
+def ussd():
+    telefone = request.form.get('phoneNumber')
+    texto    = request.form.get('text', '')
+
+    if texto == '':
+        resposta = (
+            "CON Bem-vindo ao PoupaJa\n"
+            "1. Ver caixinhas\n"
+            "2. Contribuir\n"
+            "3. Criar caixinha\n"
+            "4. Levantar dinheiro\n"
+            "5. Simulacao de progresso"
+        )
+
+    elif texto == '1':
+        resposta = (
+            "END As tuas caixinhas:\n"
+            "- Telefone: 500MT de 5000MT (10%)\n"
+            "- Viagem: 1200MT de 3000MT (40%)"
+        )
+
+    elif texto == '2':
+        resposta = (
+            "END Contribuir:\n"
+            "Funcionalidade em construcao."
+        )
+
+    elif texto == '3':
+        resposta = (
+            "END Criar caixinha:\n"
+            "Funcionalidade em construcao."
+        )
+
+    elif texto == '4':
+        resposta = (
+            "END Levantar dinheiro:\n"
+            "Funcionalidade em construcao."
+        )
+
+    elif texto == '5':
+        resposta = (
+            "END Simulacao de progresso:\n"
+            "Funcionalidade em construcao."
+        )
+
+    else:
+        resposta = "END Opcao invalida. Tenta novamente."
+
+    return resposta, 200, {'Content-Type': 'text/plain'}
+
+if __name__ == '__main__':
+    app.run(debug=True)
+Corre o servidor
+No terminal:
+
+bash
+python main.py
+Deves ver isto:
+
+* Running on http://127.0.0.1:5000
+Quando estiver a correr diz-me — passamos ao teste no simulador do Africa's Talking para veres o menu no "telemóvel".
+
+apareceu isso , mais quando entrei mostrou uma mensagem de erro e disse que nao tem uma pasta
+
+18:29
+Mostra-me o erro exacto que apareceu no terminal — copia e cola aqui o texto completo. Assim consigo ver exactamente o que está a falhar.
+
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa> cd ussd-app
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app> python main.py
+ * Serving Flask app 'main'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 847-489-292
+127.0.0.1 - - [16/May/2026 18:28:12] "GET / HTTP/1.1" 404 -
+127.0.0.1 - - [16/May/2026 18:28:12] "GET /favicon.ico HTTP/1.1" 404 -
+
+Mostrar mais
+18:29
+O servidor está a funcionar perfeitamente! O erro 404 é normal — acontece porque abriste o browser em http://127.0.0.1:5000 directamente, mas a nossa rota é /ussd, não /.
+
+O browser não serve para testar USSD. Precisas de um simulador que envie pedidos POST como uma operadora real faria.
+
+Solução rápida — testa já agora sem Africa's Talking
+Abre um segundo terminal no VS Code (sem fechar o primeiro) e corre este comando:
+
+bash
+curl -X POST http://127.0.0.1:5000/ussd -d "phoneNumber=258840000000&text="
+Deves ver o menu principal aparecer no terminal:
+
+CON Bem-vindo ao PoupaJa
+1. Ver caixinhas
+2. Contribuir
+3. Criar caixinha
+4. Levantar dinheiro
+5. Simulacao de progresso
+Depois testa a opção 1:
+
+bash
+curl -X POST http://127.0.0.1:5000/ussd -d "phoneNumber=258840000000&text=1"
+Deves ver:
+
+END As tuas caixinhas:
+- Telefone: 500MT de 5000MT (10%)
+- Viagem: 1200MT de 3000MT (40%)
+Corre esses dois comandos e diz-me o que apareceu.
+
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa> cd ussd-app
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app> curl -X POST http://127.0.0.1:5000/ussd -d "phoneNumber=258840000000&text="\
+Invoke-WebRequest : A parameter cannot be 
+found that matches parameter name 'X'.
+At line:1 char:6
++ curl -X POST http://127.0.0.1:5000/ussd -d  
+"phoneNumber=258840000000& ...
++      ~~
+    + CategoryInfo          : InvalidArgumen  
+   t: (:) [Invoke-WebRequest], ParameterBin   
+  dingException
+    + FullyQualifiedErrorId : NamedParameter  
+   NotFound,Microsoft.PowerShell.Commands.I   
+  nvokeWebRequestCommand
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app>
+
+Mostrar mais
+18:30
+O problema é que no Windows o PowerShell não reconhece o comando curl da mesma forma. Usa este comando alternativo:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=" -ContentType "application/x-www-form-urlencoded"
+E para testar a opção 1:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=1" -ContentType "application/x-www-form-urlencoded"
+Corre os dois e diz-me o que apareceu.
+
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app> Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=" -ContentType "application/x-www-form-urlencoded"                                                       
+StatusCode        : 200
+StatusDescription : OK
+Content           : CON Bem-vindo ao PoupaJa  
+                    1. Ver caixinhas
+                    2. Contribuir
+                    3. Criar caixinha
+                    4. Levantar dinheiro      
+                    5. Simulacao de progresso 
+RawContent        : HTTP/1.1 200 OK
+                    Connection: close
+                    Content-Length: 120       
+                    Content-Type: text/plain  
+                    Date: Sat, 16 May 2026    
+                    16:31:27 GMT
+                    Server: Werkzeug/3.1.3    
+                    Python/3.13.7
+                    CON Bem-vindo ao PoupaJa  
+                    1. Ver caixinha...        
+Forms             : {}
+Headers           : {[Connection, close],     
+                    [Content-Length, 120],    
+                    [Content-Type,
+                    text/plain], [Date, Sat,  
+                    16 May 2026 16:31:27      
+                    GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass  
+RawContentLength  : 120
+                                              PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app> Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=1" -ContentType "application/x-www-form-urlencoded"        
+StatusCode        : 200
+StatusDescription : OK
+Content           : END As tuas caixinhas:    
+                    - Telefone: 500MT de      
+                    5000MT (10%)
+                    - Viagem: 1200MT de       
+                    3000MT (40%)
+RawContent        : HTTP/1.1 200 OK
+                    Connection: close
+                    Content-Length: 89        
+                    Content-Type: text/plain  
+                    Date: Sat, 16 May 2026    
+                    16:31:38 GMT
+                    Server: Werkzeug/3.1.3    
+                    Python/3.13.7
+                    END As tuas caixinhas:    
+                    - Telefone: 500MT ...     
+Forms             : {}
+Headers           : {[Connection, close],     
+                    [Content-Length, 89],     
+                    [Content-Type,
+                    text/plain], [Date, Sat,  
+                    16 May 2026 16:31:38      
+                    GMT]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass  
+RawContentLength  : 89
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app>
+
+Mostrar mais
+18:31
+Está a funcionar perfeitamente!
+
+O menu principal apareceu, a opção 1 respondeu correctamente. O teu servidor USSD está vivo.
+
+O que acabaste de construir
+Utilizador marca *384#
+        ↓
+Servidor Flask recebe o pedido
+        ↓
+Devolve o menu com CON (continua) ou END (termina)
+        ↓
+Utilizador vê o texto no telemóvel
+Isto é exactamente o que acontece numa rede real com a Vodafone.
+
+Próximo passo — qual é?
+Tens duas opções, diz-me o que preferes:
+
+Opção A — Completar os menus Construir os submenus que ainda dizem "Funcionalidade em construção" — criar caixinha, contribuir, levantar, simulação. Ainda sem base de dados, com dados fictícios.
+
+Opção B — Ligar à base de dados agora Instalar o PostgreSQL, criar as tabelas e fazer o Menu 1 (ver caixinhas) mostrar dados reais em vez dos fictícios.
+
+O que faz mais sentido para ti agora?
+
+opcao A
+
+18:33
+Vamos construir os submenus um a um. Começamos pelo Menu 3 — Criar Caixinha porque é o mais importante — sem ele não há caixinhas para ver, contribuir ou levantar.
+
+Como vai funcionar o Menu 3
+O utilizador vai passar por vários ecrãs:
+
+Utilizador escolhe 3
+        ↓
+"Qual é o nome da caixinha?"  → utilizador escreve ex: Telefone
+        ↓
+"Qual é o valor objectivo?"   → utilizador escreve ex: 5000
+        ↓
+"Qual é o prazo em dias?"     → utilizador escreve ex: 30
+        ↓
+"Caixinha criada com sucesso!"
+O truque está na variável texto — ela acumula tudo o que o utilizador escreveu separado por *. Por exemplo:
+
+texto = ""        → ecrã inicial
+texto = "3"       → escolheu opção 3
+texto = "3*Telefone"   → escreveu o nome
+texto = "3*Telefone*5000"  → escreveu o valor
+texto = "3*Telefone*5000*30"  → escreveu o prazo
+Actualiza o main.py
+Apaga tudo e cola isto:
+
+python
+from flask import Flask, request
+
+app = Flask(__name__)
+
+# Dados fictícios em memória (temporário, antes da base de dados)
+caixinhas = [
+    {"nome": "Telefone", "acumulado": 500,  "objectivo": 5000, "prazo_dias": 20},
+    {"nome": "Viagem",   "acumulado": 1200, "objectivo": 3000, "prazo_dias": 45},
+]
+
+@app.route('/ussd', methods=['POST'])
+def ussd():
+    texto = request.form.get('text', '')
+    passos = texto.split('*') if texto else []
+
+    # ── ECRÃ INICIAL ──────────────────────────────────────────
+    if texto == '':
+        resposta = (
+            "CON Bem-vindo ao PoupaJa\n"
+            "1. Ver caixinhas\n"
+            "2. Contribuir\n"
+            "3. Criar caixinha\n"
+            "4. Levantar dinheiro\n"
+            "5. Simulacao de progresso"
+        )
+
+    # ── MENU 1 — VER CAIXINHAS ────────────────────────────────
+    elif passos[0] == '1':
+        if len(caixinhas) == 0:
+            resposta = "END Ainda nao tens nenhuma caixinha.\nEscolhe a opcao 3 para criar uma."
+        else:
+            resposta = "END As tuas caixinhas:\n"
+            for c in caixinhas:
+                percentagem = (c['acumulado'] / c['objectivo']) * 100
+                resposta += f"- {c['nome']}: {c['acumulado']}MT de {c['objectivo']}MT ({percentagem:.0f}%)\n"
+
+    # ── MENU 3 — CRIAR CAIXINHA ───────────────────────────────
+    elif passos[0] == '3':
+
+        # passo 1 — pedir nome
+        if len(passos) == 1:
+            resposta = "CON Nome da caixinha:\n(ex: Telefone, Viagem, TV)"
+
+        # passo 2 — pedir valor objectivo
+        elif len(passos) == 2:
+            resposta = "CON Valor objectivo em MT:\n(ex: 5000)"
+
+        # passo 3 — pedir prazo
+        elif len(passos) == 3:
+            resposta = "CON Prazo em dias:\n(ex: 30)"
+
+        # passo 4 — confirmar e guardar
+        elif len(passos) == 4:
+            nome      = passos[1]
+            objectivo = passos[2]
+            prazo     = passos[3]
+
+            # validacao simples
+            if not objectivo.isdigit() or not prazo.isdigit():
+                resposta = "END Valor ou prazo invalido.\nTenta novamente com numeros."
+            else:
+                # guarda na lista ficticia
+                caixinhas.append({
+                    "nome":       nome,
+                    "acumulado":  0,
+                    "objectivo":  float(objectivo),
+                    "prazo_dias": int(prazo)
+                })
+                contribuicao = float(objectivo) / int(prazo)
+                resposta = (
+                    f"END Caixinha '{nome}' criada!\n"
+                    f"Objectivo: {objectivo}MT\n"
+                    f"Prazo: {prazo} dias\n"
+                    f"Poupa {contribuicao:.0f}MT por dia para chegar la."
+                )
+
+    # ── MENUS 2, 4, 5 — EM CONSTRUÇÃO ────────────────────────
+    elif passos[0] == '2':
+        resposta = "END Contribuir:\nFuncionalidade em construcao."
+
+    elif passos[0] == '4':
+        resposta = "END Levantar dinheiro:\nFuncionalidade em construcao."
+
+    elif passos[0] == '5':
+        resposta = "END Simulacao de progresso:\nFuncionalidade em construcao."
+
+    else:
+        resposta = "END Opcao invalida. Tenta novamente."
+
+    return resposta, 200, {'Content-Type': 'text/plain'}
+
+if __name__ == '__main__':
+    app.run(debug=True)
+Testa assim — corre estes comandos um a um
+Ecrã inicial:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=" -ContentType "application/x-www-form-urlencoded"
+Escolhe opção 3:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3" -ContentType "application/x-www-form-urlencoded"
+Escreve o nome:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV" -ContentType "application/x-www-form-urlencoded"
+Escreve o valor:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV*8000" -ContentType "application/x-www-form-urlencoded"
+Escreve o prazo:
+
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV*8000*60" -ContentType "application/x-www-form-urlencoded"
+Corre os comandos e diz-me o que apareceu em cada um.
+
+Utilizador escolhe 3
+        ↓
+"Qual é o nome da caixinha?"  → utilizador escreve ex: Telefone
+        ↓
+"Qual é o valor objectivo?"   → utilizador escreve ex: 5000
+        ↓
+"Qual é o prazo em dias?"     → utilizador escreve ex: 30
+        ↓
+"Caixinha criada com sucesso!"
+quero que seja: o nome, prazo(no prazo terao 3 opcoes: diario, semanal, mensal e personalizado) e ai diario vai coresponder a 1, semanal 7 e mensal 30 e em personalizado é ai que vamos colocar o prazo em dias
+
+Mostrar mais
+18:42
+Boa melhoria! Faz muito mais sentido para o utilizador escolher o tipo de prazo do que escrever um número de dias directamente.
+
+O fluxo vai ficar assim:
+
+Utilizador escolhe 3
+        ↓
+"Qual é o nome da caixinha?"     → ex: Telefone
+        ↓
+"Qual é o valor objectivo?"      → ex: 5000
+        ↓
+"Escolhe o prazo:
+ 1. Diario (1 dia)
+ 2. Semanal (7 dias)
+ 3. Mensal (30 dias)
+ 4. Personalizado"
+        ↓ (se escolher 4)
+"Quantos dias?"                  → ex: 45
+        ↓
+"Caixinha criada com sucesso!"
+Actualiza só a parte do Menu 3 no main.py
+Substitui o bloco # ── MENU 3 — CRIAR CAIXINHA pelo seguinte:
+
+python
+    # ── MENU 3 — CRIAR CAIXINHA ───────────────────────────────
+    elif passos[0] == '3':
+
+        # passo 1 — pedir nome
+        if len(passos) == 1:
+            resposta = "CON Nome da caixinha:\n(ex: Telefone, Viagem, TV)"
+
+        # passo 2 — pedir valor objectivo
+        elif len(passos) == 2:
+            resposta = "CON Valor objectivo em MT:\n(ex: 5000)"
+
+        # passo 3 — pedir tipo de prazo
+        elif len(passos) == 3:
+            resposta = (
+                "CON Escolhe o prazo:\n"
+                "1. Diario (1 dia)\n"
+                "2. Semanal (7 dias)\n"
+                "3. Mensal (30 dias)\n"
+                "4. Personalizado"
+            )
+
+        # passo 4 — depende da escolha do prazo
+        elif len(passos) == 4:
+            tipo_prazo = passos[3]
+
+            if tipo_prazo == '1':
+                # diario — já temos tudo, cria a caixinha
+                nome      = passos[1]
+                objectivo = passos[2]
+                prazo     = 1
+
+                if not objectivo.isdigit():
+                    resposta = "END Valor invalido. Tenta novamente com numeros."
+                else:
+                    caixinhas.append({
+                        "nome":      nome,
+                        "acumulado": 0,
+                        "objectivo": float(objectivo),
+                        "prazo_dias": prazo
+                    })
+                    resposta = (
+                        f"END Caixinha '{nome}' criada!\n"
+                        f"Objectivo: {objectivo}MT\n"
+                        f"Prazo: diario (1 dia)\n"
+                        f"Poupa {float(objectivo):.0f}MT hoje para chegar la."
+                    )
+
+            elif tipo_prazo == '2':
+                # semanal
+                nome      = passos[1]
+                objectivo = passos[2]
+                prazo     = 7
+
+                if not objectivo.isdigit():
+                    resposta = "END Valor invalido. Tenta novamente com numeros."
+                else:
+                    caixinhas.append({
+                        "nome":      nome,
+                        "acumulado": 0,
+                        "objectivo": float(objectivo),
+                        "prazo_dias": prazo
+                    })
+                    contribuicao = float(objectivo) / prazo
+                    resposta = (
+                        f"END Caixinha '{nome}' criada!\n"
+                        f"Objectivo: {objectivo}MT\n"
+                        f"Prazo: semanal (7 dias)\n"
+                        f"Poupa {contribuicao:.0f}MT por dia para chegar la."
+                    )
+
+            elif tipo_prazo == '3':
+                # mensal
+                nome      = passos[1]
+                objectivo = passos[2]
+                prazo     = 30
+
+                if not objectivo.isdigit():
+                    resposta = "END Valor invalido. Tenta novamente com numeros."
+                else:
+                    caixinhas.append({
+                        "nome":      nome,
+                        "acumulado": 0,
+                        "objectivo": float(objectivo),
+                        "prazo_dias": prazo
+                    })
+                    contribuicao = float(objectivo) / prazo
+                    resposta = (
+                        f"END Caixinha '{nome}' criada!\n"
+                        f"Objectivo: {objectivo}MT\n"
+                        f"Prazo: mensal (30 dias)\n"
+                        f"Poupa {contribuicao:.0f}MT por dia para chegar la."
+                    )
+
+            elif tipo_prazo == '4':
+                # personalizado — pedir numero de dias
+                resposta = "CON Quantos dias?\n(ex: 45)"
+
+            else:
+                resposta = "END Opcao invalida. Tenta novamente."
+
+        # passo 5 — só chega aqui se escolheu personalizado
+        elif len(passos) == 5:
+            nome      = passos[1]
+            objectivo = passos[2]
+            prazo     = passos[4]
+
+            if not objectivo.isdigit() or not prazo.isdigit():
+                resposta = "END Valor ou prazo invalido. Tenta novamente com numeros."
+            else:
+                caixinhas.append({
+                    "nome":      nome,
+                    "acumulado": 0,
+                    "objectivo": float(objectivo),
+                    "prazo_dias": int(prazo)
+                })
+                contribuicao = float(objectivo) / int(prazo)
+                resposta = (
+                    f"END Caixinha '{nome}' criada!\n"
+                    f"Objectivo: {objectivo}MT\n"
+                    f"Prazo: {prazo} dias (personalizado)\n"
+                    f"Poupa {contribuicao:.0f}MT por dia para chegar la."
+                )
+
+        else:
+            resposta = "END Algo correu mal. Tenta novamente."
+Testa o fluxo completo — opção mensal
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3" -ContentType "application/x-www-form-urlencoded"
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV" -ContentType "application/x-www-form-urlencoded"
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV*8000" -ContentType "application/x-www-form-urlencoded"
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV*8000*3" -ContentType "application/x-www-form-urlencoded"
+Testa o fluxo personalizado
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV*8000*4" -ContentType "application/x-www-form-urlencoded"
+powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=3*TV*8000*4*45" -ContentType "application/x-www-form-urlencoded"
+Diz-me o que apareceu!
+
+
+PS C:\Users\ACER\OneDrive\Área de Trabalho\FACULDADE\2 ANO\PROG. WEB\EXERCICIO1HTML\Estudos HTML\PoupaJa\ussd-app> Invoke-WebRequest -Uri "http://127.0.0.1:5000/ussd" -Method POST -Body "phoneNumber=258840000000&text=" -ContentType "application/x-www-form-urlencoded"
+
+pasted
+
+18:48
+Tudo a funcionar perfeitamente! Todos os fluxos passaram:
+
+✅ Menu principal
+✅ Ver caixinhas
+✅ Criar caixinha — mensal
+✅ Criar caixinha — personalizado (45 dias, 178MT/dia)
+Agora vamos para o Menu 2 — Contribuir.
+
+O fluxo vai ser assim:
+
+Utilizador escolhe 2
+        ↓
+Lista as caixinhas com números
+"1. Telefone (500MT de 5000MT)
+ 2. Viagem (1200MT de 3000MT)"
+        ↓
+Utilizador escolhe qual ex: 1
+        ↓
+"Quanto queres contribuir?"   → ex: 200
+        ↓
+"Contribuicao de 200MT adicionada
+ a Telefone! Total: 700MT de 5000MT (14%)"
+Queres avançar para este menu?
+
+antes, eu  nao estou a entender se o projecto esta a andar ou nao porque eu so vejo atravez de ti, nao estou a entender nada que vc coloca para testar, nao tem uma forma diferente de testar, eu acho que nao é colocando esses todos os comandos que os devs  USSD testa ou acompanham
+
+18:55
+Tens razão! A forma que estamos a usar é muito crua. Os devs USSD normalmente usam o simulador do Africa's Talking que parece mesmo um telemóvel no browser.
+
+Vamos configurar o simulador Africa's Talking
+Passo 1 — Cria a conta
+Vai a https://africastalking.com/auth/register e cria uma conta gratuita.
+
+Passo 2 — Instala o ngrok
+O simulador do Africa's Talking está na internet, mas o teu servidor está no teu computador. O ngrok cria um túnel entre os dois.
+
+Vai a https://ngrok.com/download, faz download e instala.
+
+Depois no terminal:
+
+bash
+ngrok http 5000
+Vai aparecer algo assim:
+
+Forwarding  https://abc123.ngrok.io → http://localhost:5000
+Copia esse link https://abc123.ngrok.io — é o endereço público do teu servidor.
+
+Passo 3 — Configura no Africa's Talking
+Entra na tua conta
+Vai a USSD no menu lateral
+Cria um novo serviço USSD
+No campo callback URL cola o teu link ngrok assim: https://abc123.ngrok.io/ussd
+Guarda
+Passo 4 — Usa o simulador
+No painel do Africa's Talking há um botão Simulator — abre, marca o código USSD e vês o menu aparecer como num telemóvel real.
+
+Começa pelo Passo 1 e diz-me quando tiveres a conta criada.
+
+Passo 2 — Instala o ngrok- nao consigo instalar isso, o link que vc me deu nao da nenhuma forma de baixar isso e instalar
+
+19:04
+Tens razão, o ngrok mudou o site. Vamos usar uma alternativa mais simples.
+
+Alternativa — Usar o localtunnel
+É mais simples que o ngrok e instala com um comando só. No terminal:
+
+bash
+npm install -g localtunnel
+Depois com o servidor Flask a correr, abre um segundo terminal e corre:
+
+bash
+lt --port 5000
+Vai aparecer algo assim:
+
+your url is: https://algo-aleatorio.loca.lt
+Copia esse link — é o endereço público do teu servidor.
+
+Tens o Node.js instalado? Verifica no terminal:
+
+bash
+node --version
+Se aparecer um número como v20.0.0 está instalado. Se não aparecer, vai a https://nodejs.org e instala a versão LTS.
+
+Diz-me o que apareceu.
+
+é preciso isso tudo para testar  USSD ?
+
+19:06
+Não necessariamente. Deixa-me ser directo.
+
+Para testar USSD tens 3 opções reais:
+
+Opção 1 — Comandos no terminal (o que estamos a fazer) Funciona, mas é feio e difícil de acompanhar. É o que tens agora.
+
+Opção 2 — Simulador no browser (Africa's Talking) Parece um telemóvel real. Precisas do ngrok ou localtunnel para ligar o teu servidor ao simulador. É o mais visual.
+
+Opção 3 — Criar um simulador simples tu mesmo Uma página HTML simples que imita um telemóvel USSD e fala directamente com o teu servidor Flask. Não precisas de ngrok, não precisas de Africa's Talking. Corre tudo no teu computador.
+
+A Opção 3 é a mais prática para ti agora porque:
+
+Vês o menu como num telemóvel
+Não dependes de serviços externos
+Instalas zero coisas novas
+Funciona já hoje
+Queres que eu crie esse simulador para ti?
+
+sim
+
+19:07
+Vamos criar o simulador. Primeiro precisamos de permitir que o Flask aceite pedidos do browser — adiciona isto ao teu main.py logo após app = Flask(__name__):
+
+python
+from flask_cors import CORS
+CORS(app)
+E instala o flask-cors no terminal:
+
+bash
+pip install flask-cors
+Agora cria um ficheiro simulador.html directamente na pasta ussd-app e cola isto:
+
+
+Criou um arquivo, leu um arquivo
+Criou um arquivo, leu um arquivo
+
+Simulador USSD visual para o PoupaJá
+simulador.html
+
+Presented file
+Concluído
+Descarrega esse ficheiro e guarda-o dentro da pasta ussd-app. Depois:
+
+Passo 1 — Instala o flask-cors no terminal:
+
+bash
+pip install flask-cors
+Passo 2 — Adiciona estas duas linhas no main.py logo após app = Flask(__name__):
+
+python
+from flask_cors import CORS
+CORS(app)
+Passo 3 — Com o servidor Flask a correr (python main.py), abre o simulador.html no browser.
+
+Vais ver um telemóvel com teclado. Carrega no botão ✆ verde e o menu aparece. Depois é só escrever as opções e carregar ↵ — exactamente como num telemóvel real.
+
+
+Simulador
+Código · HTML 
+
+
+
+
+
+Claude é uma IA e pode cometer erros. Por favor, verifique as respostas.
+Simulador · HTML
+Copiar
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoupaJá — Simulador USSD</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    padding: 20px;
+  }
+ 
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+ 
+  .title {
+    color: #a0a8c0;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+ 
+  /* TELEFONE */
+  .phone {
+    width: 300px;
+    background: #111118;
+    border-radius: 36px;
+    padding: 20px 16px 28px;
+    border: 2px solid #2a2a3e;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+  }
+ 
+  .phone-top {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+ 
+  .notch {
+    width: 80px;
+    height: 10px;
+    background: #1e1e2e;
+    border-radius: 10px;
+  }
+ 
+  /* ECRÃ */
+  .screen {
+    background: #0d1117;
+    border-radius: 16px;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #1e2030;
+  }
+ 
+  .screen-header {
+    background: #161b22;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1e2030;
+  }
+ 
+  .operator {
+    color: #58a6ff;
+    font-size: 11px;
+    font-weight: 600;
+  }
+ 
+  .signal {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+  }
+ 
+  .signal span {
+    background: #58a6ff;
+    width: 3px;
+    border-radius: 1px;
+  }
+ 
+  .screen-body {
+    flex: 1;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+ 
+  .ussd-code {
+    color: #8b949e;
+    font-size: 10px;
+    font-family: monospace;
+  }
+ 
+  .message-box {
+    background: #161b22;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #1e2030;
+    flex: 1;
+  }
+ 
+  .message-text {
+    color: #e6edf3;
+    font-size: 12.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    font-family: monospace;
+    min-height: 160px;
+  }
+ 
+  .message-text.loading {
+    color: #8b949e;
+    font-style: italic;
+  }
+ 
+  /* INPUT DO TELEMÓVEL */
+  .screen-input-area {
+    padding: 8px 12px 12px;
+    border-top: 1px solid #1e2030;
+    display: flex;
+    gap: 6px;
+    background: #0d1117;
+  }
+ 
+  .screen-input {
+    flex: 1;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e6edf3;
+    font-size: 13px;
+    padding: 6px 8px;
+    outline: none;
+    font-family: monospace;
+  }
+ 
+  .screen-input:focus {
+    border-color: #58a6ff;
+  }
+ 
+  .screen-input::placeholder {
+    color: #484f58;
+  }
+ 
+  .btn-send {
+    background: #238636;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 16px;
+    width: 34px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+ 
+  .btn-send:hover { background: #2ea043; }
+  .btn-send:disabled { background: #21262d; cursor: not-allowed; }
+ 
+  /* BOTÕES DO TECLADO */
+  .keypad {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 0 8px;
+  }
+ 
+  .key {
+    background: #1e2030;
+    border: 1px solid #2a2a3e;
+    border-radius: 10px;
+    color: #c9d1d9;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.1s, transform 0.1s;
+    user-select: none;
+  }
+ 
+  .key:hover { background: #2d2f45; }
+  .key:active { transform: scale(0.95); background: #3d3f55; }
+ 
+  .key.special {
+    color: #f85149;
+    font-size: 18px;
+  }
+ 
+  .key.call {
+    background: #1a3a1a;
+    border-color: #238636;
+    color: #3fb950;
+    font-size: 18px;
+  }
+ 
+  .key.call:hover { background: #1f4a1f; }
+ 
+  /* HISTÓRICO */
+  .history {
+    width: 300px;
+    background: #111118;
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid #2a2a3e;
+  }
+ 
+  .history-title {
+    color: #8b949e;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+ 
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+ 
+  .history-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+ 
+  .h-arrow {
+    font-size: 10px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+ 
+  .h-arrow.sent { color: #58a6ff; }
+  .h-arrow.recv { color: #3fb950; }
+ 
+  .h-text {
+    font-size: 11px;
+    font-family: monospace;
+    color: #8b949e;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+ 
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 4px; }
+ 
+  /* STATUS */
+  .status-bar {
+    width: 300px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+ 
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3fb950;
+  }
+ 
+  .status-dot.offline { background: #f85149; }
+ 
+  .status-text {
+    font-size: 11px;
+    color: #8b949e;
+  }
+ 
+  .btn-reset {
+    background: transparent;
+    border: 1px solid #2a2a3e;
+    border-radius: 6px;
+    color: #8b949e;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+ 
+  .btn-reset:hover {
+    border-color: #f85149;
+    color: #f85149;
+  }
+</style>
+</head>
+<body>
+ 
+<div class="wrapper">
+  <p class="title">PoupaJá · Simulador USSD</p>
+ 
+  <!-- STATUS -->
+  <div class="status-bar">
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">Servidor em http://127.0.0.1:5000</span>
+    </div>
+    <button class="btn-reset" onclick="resetSession()">↺ Reset</button>
+  </div>
+ 
+  <!-- TELEFONE -->
+  <div class="phone">
+    <div class="phone-top"><div class="notch"></div></div>
+ 
+    <div class="screen">
+      <div class="screen-header">
+        <span class="operator">Vodacom MZ</span>
+        <div class="signal">
+          <span style="height:4px"></span>
+          <span style="height:6px"></span>
+          <span style="height:9px"></span>
+          <span style="height:12px"></span>
+        </div>
+      </div>
+ 
+      <div class="screen-body">
+        <span class="ussd-code" id="ussdCode">*384#</span>
+        <div class="message-box">
+          <div class="message-text" id="messageText">Prima ✆ para marcar *384#</div>
+        </div>
+      </div>
+ 
+      <div class="screen-input-area" id="inputArea" style="display:none;">
+        <input
+          class="screen-input"
+          id="userInput"
+          type="text"
+          placeholder="Escreve aqui..."
+          onkeydown="if(event.key==='Enter') enviar()"
+        />
+        <button class="btn-send" id="btnSend" onclick="enviar()">↵</button>
+      </div>
+    </div>
+ 
+    <!-- TECLADO -->
+    <div class="keypad">
+      <div class="key" onclick="addKey('1')">1</div>
+      <div class="key" onclick="addKey('2')">2</div>
+      <div class="key" onclick="addKey('3')">3</div>
+      <div class="key" onclick="addKey('4')">4</div>
+      <div class="key" onclick="addKey('5')">5</div>
+      <div class="key" onclick="addKey('6')">6</div>
+      <div class="key" onclick="addKey('7')">7</div>
+      <div class="key" onclick="addKey('8')">8</div>
+      <div class="key" onclick="addKey('9')">9</div>
+      <div class="key special" onclick="apagar()">⌫</div>
+      <div class="key" onclick="addKey('0')">0</div>
+      <div class="key call" onclick="chamar()">✆</div>
+    </div>
+  </div>
+ 
+  <!-- HISTÓRICO -->
+  <div class="history">
+    <p class="history-title">Histórico da sessão</p>
+    <div class="history-list" id="historyList">
+      <div class="history-item">
+        <span class="h-arrow recv">·</span>
+        <span class="h-text" style="color:#484f58;">Nenhuma interacção ainda</span>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<script>
+  const SERVER = 'http://127.0.0.1:5000/ussd';
+  const PHONE  = '258840000000';
+ 
+  let sessionId  = 'sim-' + Date.now();
+  let textAcum   = '';
+  let sessaoActiva = false;
+ 
+  function addKey(k) {
+    const input = document.getElementById('userInput');
+    if (document.getElementById('inputArea').style.display !== 'none') {
+      input.value += k;
+      input.focus();
+    }
+  }
+ 
+  function apagar() {
+    const input = document.getElementById('userInput');
+    input.value = input.value.slice(0, -1);
+  }
+ 
+  async function chamar() {
+    if (sessaoActiva) return;
+    sessionId = 'sim-' + Date.now();
+    textAcum  = '';
+    sessaoActiva = true;
+    setMsg('A ligar...', true);
+    await enviarParaServidor('');
+  }
+ 
+  async function enviar() {
+    const input = document.getElementById('userInput');
+    const val   = input.value.trim();
+    if (!val) return;
+ 
+    addHistorico('sent', val);
+    textAcum = textAcum ? textAcum + '*' + val : val;
+    input.value = '';
+    setMsg('A processar...', true);
+    await enviarParaServidor(textAcum);
+  }
+ 
+  async function enviarParaServidor(texto) {
+    try {
+      const resp = await fetch(SERVER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `sessionId=${sessionId}&phoneNumber=${PHONE}&text=${encodeURIComponent(texto)}`
+      });
+ 
+      const txt = await resp.text();
+      processarResposta(txt);
+      setOnline(true);
+    } catch (e) {
+      setMsg('Erro: não foi possível ligar ao servidor.\nCertifica-te que o Flask está a correr:\n\npython main.py', false);
+      setOnline(false);
+      sessaoActiva = false;
+      document.getElementById('inputArea').style.display = 'none';
+    }
+  }
+ 
+  function processarResposta(txt) {
+    addHistorico('recv', txt);
+ 
+    if (txt.startsWith('CON ')) {
+      const msg = txt.slice(4);
+      setMsg(msg, false);
+      document.getElementById('inputArea').style.display = 'flex';
+      document.getElementById('userInput').focus();
+    } else if (txt.startsWith('END ')) {
+      const msg = txt.slice(4);
+      setMsg(msg + '\n\n[Sessão terminada]', false);
+      document.getElementById('inputArea').style.display = 'none';
+      sessaoActiva = false;
+    } else {
+      setMsg(txt, false);
+      document.getElementById('inputArea').style.display = 'none';
+      sessaoActiva = false;
+    }
+  }
+ 
+  function setMsg(txt, loading) {
+    const el = document.getElementById('messageText');
+    el.textContent = txt;
+    el.className = 'message-text' + (loading ? ' loading' : '');
+  }
+ 
+  function addHistorico(tipo, txt) {
+    const list = document.getElementById('historyList');
+ 
+    if (list.querySelector('[data-empty]')) list.innerHTML = '';
+ 
+    const item = document.createElement('div');
+    item.className = 'history-item';
+ 
+    const arrow = document.createElement('span');
+    arrow.className = 'h-arrow ' + (tipo === 'sent' ? 'sent' : 'recv');
+    arrow.textContent = tipo === 'sent' ? '▶' : '◀';
+ 
+    const text = document.createElement('span');
+    text.className = 'h-text';
+    text.textContent = txt.length > 80 ? txt.slice(0, 80) + '…' : txt;
+ 
+    item.appendChild(arrow);
+    item.appendChild(text);
+    list.appendChild(item);
+    list.scrollTop = list.scrollHeight;
+  }
+ 
+  function resetSession() {
+    sessionId    = 'sim-' + Date.now();
+    textAcum     = '';
+    sessaoActiva = false;
+    document.getElementById('inputArea').style.display = 'none';
+    document.getElementById('userInput').value = '';
+    document.getElementById('messageText').textContent = 'Prima ✆ para marcar *384#';
+    document.getElementById('messageText').className = 'message-text';
+    document.getElementById('historyList').innerHTML = `
+      <div class="history-item" data-empty>
+        <span class="h-arrow recv">·</span>
+        <span class="h-text" style="color:#484f58;">Sessão reiniciada</span>
+      </div>`;
+  }
+ 
+  function setOnline(online) {
+    document.getElementById('statusDot').className = 'status-dot' + (online ? '' : ' offline');
+    document.getElementById('statusText').textContent = online
+      ? 'Servidor em http://127.0.0.1:5000'
+      : 'Servidor offline — corre: python main.py';
+  }
+</script>
+</body>
+</html>
