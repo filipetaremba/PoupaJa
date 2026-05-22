@@ -3,8 +3,8 @@ const palette = {
   red50: "#FFF0F1",
   red100: "#FFD6D9",
   red200: "#FF9AA2",
-  red400: "#F04452",
-  red500: "#E8192C",
+  red400: "#ff505eff",
+  red500: "#FF9AA2",
   red600: "#C0121F",
   red700: "#8F0B16",
 

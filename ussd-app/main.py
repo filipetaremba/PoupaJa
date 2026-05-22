@@ -67,6 +67,100 @@ def ussd():
                     f"   {c['acumulado']}MT de {c['objectivo']}MT ({pct:.0f}%)\n"
                     f"   Debito: {c['valor_debito']}MT/{c['frequencia']}\n"
                 )
+    
+    # ── MENU 2 — CONTRIBUIR ───────────────────────────────────
+    elif passos[0] == '2':
+
+        # passo 1 — listar caixinhas
+        if len(passos) == 1:
+            if len(caixinhas) == 0:
+                resposta = "END Nao tens nenhuma caixinha.\nCria uma primeiro na opcao 3."
+            else:
+                resposta = "CON Escolhe a caixinha:\n"
+                for i, c in enumerate(caixinhas, 1):
+                    pct = (c['acumulado'] / c['objectivo']) * 100
+                    resposta += f"{i}. {c['nome']} ({pct:.0f}%)\n"
+
+        # passo 2 — pedir valor
+        elif len(passos) == 2:
+            escolha = passos[1]
+            if not escolha.isdigit() or int(escolha) < 1 or int(escolha) > len(caixinhas):
+                resposta = "END Opcao invalida. Tenta novamente."
+            else:
+                c = caixinhas[int(escolha) - 1]
+                falta = c['objectivo'] - c['acumulado']
+                resposta = (
+                    f"CON {c['nome']}\n"
+                    f"Acumulado: {c['acumulado']}MT de {c['objectivo']}MT\n"
+                    f"Falta: {falta:.0f}MT\n\n"
+                    f"Valor a contribuir em MT:"
+                )
+
+        # passo 3 — confirmacao
+        elif len(passos) == 3:
+            escolha = passos[1]
+            valor   = passos[2]
+
+            if not valor.isdigit():
+                resposta = "END Valor invalido. Usa so numeros."
+            else:
+                c         = caixinhas[int(escolha) - 1]
+                falta     = c['objectivo'] - c['acumulado']
+                valor_int = int(valor)
+
+                # se ultrapassa o objectivo, aceita só até ao limite
+                if valor_int > falta:
+                    valor_int = int(falta)
+
+                novo_total = c['acumulado'] + valor_int
+                pct        = (novo_total / c['objectivo']) * 100
+
+                resposta = (
+                    f"CON Confirma a contribuicao:\n"
+                    f"Caixinha: {c['nome']}\n"
+                    f"Valor: {valor_int}MT\n"
+                    f"Novo total: {novo_total:.0f}MT de {c['objectivo']:.0f}MT ({pct:.0f}%)\n\n"
+                    f"1. Confirmar\n"
+                    f"2. Cancelar"
+                )
+
+        # passo 4 — guardar ou cancelar
+        elif len(passos) == 4:
+            escolha    = passos[1]
+            valor      = passos[2]
+            confirmacao = passos[3]
+
+            if confirmacao == '2':
+                resposta = "END Contribuicao cancelada."
+
+            elif confirmacao == '1':
+                c         = caixinhas[int(escolha) - 1]
+                falta     = c['objectivo'] - c['acumulado']
+                valor_int = min(int(valor), int(falta))
+
+                c['acumulado'] += valor_int
+                pct = (c['acumulado'] / c['objectivo']) * 100
+
+                # verifica se atingiu o objectivo
+                if c['acumulado'] >= c['objectivo']:
+                    resposta = (
+                        f"END Parabens! Objectivo atingido!\n"
+                        f"Caixinha '{c['nome']}' esta completa.\n\n"
+                        f"Marca novamente e vai a opcao 4\n"
+                        f"para levantar ou aumentar o objectivo."
+                    )
+                else:
+                    falta_nova = c['objectivo'] - c['acumulado']
+                    resposta = (
+                        f"END {valor_int}MT adicionados a '{c['nome']}'!\n"
+                        f"Total: {c['acumulado']:.0f}MT de {c['objectivo']:.0f}MT ({pct:.0f}%)\n"
+                        f"Falta: {falta_nova:.0f}MT"
+                    )
+            else:
+                resposta = "END Opcao invalida."
+
+        else:
+            resposta = "END Algo correu mal. Tenta novamente."
 
     # ── MENU 3 — CRIAR CAIXINHA ───────────────────────────────
     elif passos[0] == '3':
@@ -160,12 +254,132 @@ def ussd():
         else:
             resposta = "END Algo correu mal. Tenta novamente."
 
-    # ── MENUS 2, 4, 5 — EM CONSTRUÇÃO ────────────────────────
-    elif passos[0] == '2':
-        resposta = "END Contribuir:\nFuncionalidade em construcao."
 
+# ── MENU 4 — LEVANTAR DINHEIRO ────────────────────────────
     elif passos[0] == '4':
-        resposta = "END Levantar dinheiro:\nFuncionalidade em construcao."
+
+        # passo 1 — listar caixinhas
+        if len(passos) == 1:
+            if len(caixinhas) == 0:
+                resposta = "END Nao tens nenhuma caixinha.\nCria uma primeiro na opcao 3."
+            else:
+                resposta = "CON Escolhe a caixinha:\n"
+                for i, c in enumerate(caixinhas, 1):
+                    pct = (c['acumulado'] / c['objectivo']) * 100
+                    completa = " (Completa!)" if c['acumulado'] >= c['objectivo'] else ""
+                    resposta += f"{i}. {c['nome']} — {c['acumulado']:.0f}MT ({pct:.0f}%){completa}\n"
+
+        # passo 2 — mostrar opcoes consoante estado da caixinha
+        elif len(passos) == 2:
+            escolha = passos[1]
+            if not escolha.isdigit() or int(escolha) < 1 or int(escolha) > len(caixinhas):
+                resposta = "END Opcao invalida. Tenta novamente."
+            else:
+                c = caixinhas[int(escolha) - 1]
+
+                # caixinha completa — sem penalizacao
+                if c['acumulado'] >= c['objectivo']:
+                    resposta = (
+                        f"CON '{c['nome']}' esta completa!\n"
+                        f"Total: {c['acumulado']:.0f}MT\n\n"
+                        f"O que queres fazer?\n"
+                        f"1. Levantar para o M-Pesa\n"
+                        f"2. Aumentar o objectivo"
+                    )
+                # caixinha incompleta — com penalizacao
+                else:
+                    penalizacao = c['acumulado'] * 0.10
+                    valor_liquido = c['acumulado'] - penalizacao
+                    resposta = (
+                        f"CON Levantamento antecipado:\n"
+                        f"Acumulado: {c['acumulado']:.0f}MT\n"
+                        f"Penalizacao (10%): -{penalizacao:.0f}MT\n"
+                        f"Recebes: {valor_liquido:.0f}MT\n\n"
+                        f"1. Confirmar levantamento\n"
+                        f"2. Cancelar"
+                    )
+
+        # passo 3 — accao escolhida
+        elif len(passos) == 3:
+            escolha = passos[1]
+            accao   = passos[2]
+            c       = caixinhas[int(escolha) - 1]
+
+            # --- caixinha COMPLETA ---
+            if c['acumulado'] >= c['objectivo']:
+
+                # levantar
+                if accao == '1':
+                    valor = c['acumulado']
+                    c['acumulado'] = 0
+                    c['objectivo'] = 0
+                    resposta = (
+                        f"END {valor:.0f}MT transferidos\n"
+                        f"para o teu M-Pesa com sucesso!\n"
+                        f"Caixinha '{c['nome']}' encerrada.\n"
+                        f"Bom proveito!"
+                    )
+                    caixinhas.remove(c)
+
+                # aumentar objectivo
+                elif accao == '2':
+                    resposta = (
+                        f"CON Novo valor objectivo em MT:\n"
+                        f"(actual: {c['objectivo']:.0f}MT)\n"
+                        f"Tem de ser maior que {c['objectivo']:.0f}MT"
+                    )
+
+                else:
+                    resposta = "END Opcao invalida."
+
+            # --- caixinha INCOMPLETA ---
+            else:
+                if accao == '1':
+                    penalizacao   = c['acumulado'] * 0.10
+                    valor_liquido = c['acumulado'] - penalizacao
+                    nome          = c['nome']
+                    c['acumulado'] = 0
+                    caixinhas.remove(c)
+                    resposta = (
+                        f"END {valor_liquido:.0f}MT transferidos\n"
+                        f"para o teu M-Pesa.\n"
+                        f"Penalizacao aplicada: {penalizacao:.0f}MT\n"
+                        f"Caixinha '{nome}' encerrada."
+                    )
+
+                elif accao == '2':
+                    resposta = "END Levantamento cancelado.\nA tua poupanca continua!"
+
+                else:
+                    resposta = "END Opcao invalida."
+
+        # passo 4 — só chega aqui se escolheu aumentar objectivo
+        elif len(passos) == 4:
+            escolha      = passos[1]
+            novo_obj_str = passos[3]
+            c            = caixinhas[int(escolha) - 1]
+
+            if not novo_obj_str.isdigit():
+                resposta = "END Valor invalido. Usa so numeros."
+            elif float(novo_obj_str) <= c['objectivo']:
+                resposta = (
+                    f"END O novo objectivo tem de ser\n"
+                    f"maior que {c['objectivo']:.0f}MT."
+                )
+            else:
+                antigo        = c['objectivo']
+                c['objectivo'] = float(novo_obj_str)
+                falta         = c['objectivo'] - c['acumulado']
+                resposta = (
+                    f"END Objectivo actualizado!\n"
+                    f"Antes: {antigo:.0f}MT\n"
+                    f"Novo:  {novo_obj_str}MT\n"
+                    f"Falta: {falta:.0f}MT\n"
+                    f"Continua a poupar!"
+                )
+
+        else:
+            resposta = "END Algo correu mal. Tenta novamente."
 
     elif passos[0] == '5':
         resposta = "END Simulacao de progresso:\nFuncionalidade em construcao."
